@@ -1,56 +1,6 @@
-function command(instruction) {
-  switch (instruction) {
-    case "L": {
-      const mapping = {
-        N: "W",
-        W: "S",
-        S: "E",
-        E: "N",
-      };
-      this.orientation = mapping[this.orientation];
-      break;
-    }
-    case "R": {
-      const mapping = {
-        N: "E",
-        E: "S",
-        S: "W",
-        W: "N",
-      };
-      this.orientation = mapping[this.orientation];
-      break;
-    }
-    case "F": {
-      const mapping = {
-        N: [0, 1],
-        E: [1, 0],
-        S: [0, -1],
-        W: [-1, 0],
-      };
-      const movement = mapping[this.orientation];
-      const result = [
-        this.position[0] + movement[0],
-        this.position[1] + movement[1],
-      ];
-      if (
-        result[0] < 0 ||
-        result[1] < 0 ||
-        result[0] > this.surface.grid[0] ||
-        result[1] > this.surface.grid[1]
-      ) {
-        this.lost = true;
-        this.surface.unsafeArea.add(
-          `${this.position[0]} ${this.position[1]} ${this.orientation} ${instruction}`
-        );
-        break;
-      }
-      this.position = result;
-      break;
-    }
-    default:
-      break;
-  }
-}class Expedition {
+const Robot = require('./robot');
+
+class Expedition {
   constructor(surface, robots) {
     this.surface = surface;
     this.robots = robots;
@@ -63,49 +13,34 @@ function command(instruction) {
     }
     robots = robots.map(r => r.trim());
     const [gridX, gridY] = grid.split(" ");
-    const martianRobots = [];
     const unsafeArea = new Set();
     const surface = {
       unsafeArea,
       grid: [gridX, gridY].map(c => parseInt(c, 10))
     }
-    for (let i = 0; i < robots.length / 2; i++) {
-      const robot = robots.slice(i * 2, i * 2 + 2);
-      const [position, instructions] = robot;
-      const [x, y, orientation] = position.split(" ");
-
-      martianRobots.push({
-        name: "Mars " + i,
-        position: [x, y].map((c) => parseInt(c, 10)),
-        orientation,
-        instructions,
-        command,
-        surface,
-      });
-    }
-    return new Expedition(surface, martianRobots);
+    const martians = robots.reduce((prev, _, index) => {
+      if (index % 2 === 0) {
+        const robot = robots.slice(index, index + 2);
+        const [position, instructions] = robot;
+        const [x, y, orientation] = position.split(' ');
+        const martianRobot = new Robot({
+          position: [x, y].map(p => parseInt(p, 10)),
+          orientation,
+          surface,
+        });
+        martianRobot.loadInstructions(instructions);
+        prev.push(martianRobot);
+      }
+      return prev;
+    }, []);
+    return new Expedition(surface, martians);
   }
 
   start() {
-    const results = [];
     for (const robot of this.robots) {
-      for (const instruction of robot.instructions) {
-        if (robot.lost) {
-          break;
-        }
-        if (
-          this.surface.unsafeArea.has(
-            `${robot.position[0]} ${robot.position[1]} ${robot.orientation} ${instruction}`
-          )
-        ) {
-          continue;
-        }
-        robot.command(instruction);
-      }
-      results.push(`${robot.position[0]} ${robot.position[1]} ${robot.orientation} ${robot.lost ? "LOST" : ""}`.trim());
+      robot.explore();
     }
-    console.log(results.join('\n'));
-    return results.join('\n');
+    return this.robots.map(r => r.location()).join('\n');
   }
 }
 
