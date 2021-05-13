@@ -57,13 +57,17 @@ function command(instruction) {
   }
 
   static fromString(input) {
-    const [grid, ...robots] = input.split("\n");
+    let [grid, ...robots] = input.trim().split("\n");
+    if (!grid.length) {
+      throw new Error('Empty grid');
+    }
+    robots = robots.map(r => r.trim());
     const [gridX, gridY] = grid.split(" ");
     const martianRobots = [];
     const unsafeArea = new Set();
     const surface = {
       unsafeArea,
-      grid: [gridX, gridY]
+      grid: [gridX, gridY].map(c => parseInt(c, 10))
     }
     for (let i = 0; i < robots.length / 2; i++) {
       const robot = robots.slice(i * 2, i * 2 + 2);
@@ -83,6 +87,7 @@ function command(instruction) {
   }
 
   start() {
+    const results = [];
     for (const robot of this.robots) {
       for (const instruction of robot.instructions) {
         if (robot.lost) {
@@ -97,8 +102,10 @@ function command(instruction) {
         }
         robot.command(instruction);
       }
-      console.log(robot.position, robot.orientation, robot.lost ? "LOST" : "");
+      results.push(`${robot.position[0]} ${robot.position[1]} ${robot.orientation} ${robot.lost ? "LOST" : ""}`.trim());
     }
+    console.log(results.join('\n'));
+    return results.join('\n');
   }
 }
 
