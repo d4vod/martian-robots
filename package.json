@@ -4,7 +4,8 @@
   "description": "Martian expedition with fancy robots",
   "main": "main.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "start": "node main.js"
   },
   "author": "",
   "prettier": {
