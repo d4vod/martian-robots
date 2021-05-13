@@ -2,12 +2,15 @@
   "name": "martian-robots",
   "version": "0.1.0",
   "description": "Martian expedition with fancy robots",
-	"type": "module",
+  "type": "module",
   "main": "main.js",
   "scripts": {
     "test": "jest"
   },
   "author": "",
+  "prettier": {
+    "tabWidth": 2
+  },
   "license": "ISC",
   "devDependencies": {
     "jest": "^26.6.3"
