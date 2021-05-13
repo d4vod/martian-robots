@@ -2,7 +2,6 @@
   "name": "martian-robots",
   "version": "0.1.0",
   "description": "Martian expedition with fancy robots",
-  "type": "module",
   "main": "main.js",
   "scripts": {
     "test": "jest"
