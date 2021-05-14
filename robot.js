@@ -60,7 +60,7 @@ class Robot {
           result[1] > this.surface.grid[1]
         ) {
           this.lost = true;
-          this.surface.unsafeArea.add(
+          this.surface.markUnsafeStep(
             `${this.position[0]} ${this.position[1]} ${this.orientation} -> ${instruction}`
           );
           break;
@@ -79,7 +79,7 @@ class Robot {
         break;
       }
       if (
-        this.surface.unsafeArea.has(
+        this.surface.isUnsafeStep(
           `${this.position[0]} ${this.position[1]} ${this.orientation} -> ${instruction}`
         )
       ) {

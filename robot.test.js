@@ -1,13 +1,11 @@
+const Surface = require('./surface');
 const Robot = require("./robot");
 
 describe("Robot", () => {
   let robot;
   let surface;
   beforeEach(() => {
-    surface = {
-      grid: [20, 20],
-      unsafeArea: new Set(),
-    };
+    surface = new Surface([ 20, 20 ]);
     robot = new Robot({ position: [0, 10], orientation: "N", surface });
   });
 
@@ -48,27 +46,21 @@ describe("Robot", () => {
   });
 
   test('Robot should leave scent after getting lost', () => {
-    let surface = {
-      grid: [5, 5],
-      unsafeArea: new Set()
-    };
+    let surface = new Surface([ 5, 5]);
     let robot = new Robot({ position: [0, 0], orientation: 'E', surface });
     robot.loadInstructions("FFFFFF")
     robot.explore();
     expect(robot.location()).toBe("5 0 E LOST");
-    expect(surface.unsafeArea.has("5 0 E -> F")).toBe(true);
+    expect(surface.isUnsafeStep("5 0 E -> F")).toBe(true);
   });
 
   test('Other robots should ignore instructions which point to the abyss', () => {
-    let surface = {
-      grid: [5, 5],
-      unsafeArea: new Set()
-    };
+    let surface = new Surface([ 5, 5]);
     let robot = new Robot({ position: [0, 0], orientation: 'E', surface });
     robot.loadInstructions("FFFFFF")
     robot.explore();
     expect(robot.location()).toBe("5 0 E LOST");
-    expect(surface.unsafeArea.has("5 0 E -> F")).toBe(true);
+    expect(surface.isUnsafeStep("5 0 E -> F")).toBe(true);
 
     let robot2 = new Robot({ position: [0, 0], orientation: 'E', surface });
     // F (1,0,E) -> F (2,0,E) -> F (3,0,E) -> F (4,0,E) -> F (5,0,E) -> F (6,0,E) IGNORED -> L (5,0,N) -> F (5,1,N)
