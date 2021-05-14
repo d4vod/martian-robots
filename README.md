@@ -56,15 +56,3 @@ Run with Docker:
 ```
   npm run test
 ```
-
-
-## Tests
-
-```
-  npm run test
-```
-## Tests
-
-```
-  npm run test
-```
