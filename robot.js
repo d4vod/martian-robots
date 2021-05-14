@@ -1,3 +1,21 @@
+class Step {
+  constructor({ from, to, instruction, safe, off }) {
+    this.from = from;
+    this.to = to;
+    this.instruction = instruction;
+    this.ignored = !safe;
+    this.safe = safe;
+    this.off = off;
+  }
+  isSafe() {
+    return this.safe;
+  }
+
+  isOff() {
+    return this.off && this.safe;
+  }
+}
+
 class Robot {
   constructor({ position, orientation, surface }) {
     this.position = position;
@@ -5,21 +23,39 @@ class Robot {
     this.surface = surface;
     this.instruction = null;
     this.lost = false;
+    this.path = new Set();
   }
 
   loadInstructions(instructions) {
     if (!instructions.match(/[RFL]+/)) {
-      throw new Error('Brrrr bad instructions');
+      throw new Error("Brrrr bad instructions");
     }
     this.instructions = instructions;
   }
 
-  location() {
-    const [x, y] = this.position;
-    return `${x} ${y} ${this.orientation} ${this.lost ? 'LOST' : ''}`.trim();
+  formatInstruction(instruction) {
+    return `${this.location()} -> ${instruction}`;
   }
 
-  command(instruction) {
+  leaveScent(instruction) {
+    this.surface.markUnsafeStep(this.formatInstruction(instruction));
+    this.lost = true;
+    return null;
+  }
+
+  location() {
+    const [x, y] = this.position;
+    return `${x} ${y} ${this.orientation} ${this.lost ? "LOST" : ""}`.trim();
+  }
+
+  command(step) {
+    const [position, orientation] = step.to;
+    this.position = position;
+    this.orientation = orientation;
+  }
+
+  calculateInstruction(instruction) {
+    let position = this.position;
     switch (instruction) {
       case "L": {
         const mapping = {
@@ -28,8 +64,7 @@ class Robot {
           S: "E",
           E: "N",
         };
-        this.orientation = mapping[this.orientation];
-        break;
+        return [position, mapping[this.orientation]];
       }
       case "R": {
         const mapping = {
@@ -38,8 +73,7 @@ class Robot {
           S: "W",
           W: "N",
         };
-        this.orientation = mapping[this.orientation];
-        break;
+        return [position, mapping[this.orientation]];
       }
       case "F": {
         const mapping = {
@@ -49,44 +83,45 @@ class Robot {
           W: [-1, 0],
         };
         const movement = mapping[this.orientation];
-        const result = [
-          this.position[0] + movement[0],
-          this.position[1] + movement[1],
+        position = [
+          position[0] + movement[0],
+          position[1] + movement[1],
         ];
-        if (
-          result[0] < 0 ||
-          result[1] < 0 ||
-          result[0] > this.surface.grid[0] ||
-          result[1] > this.surface.grid[1]
-        ) {
-          this.lost = true;
-          this.surface.markUnsafeStep(
-            `${this.position[0]} ${this.position[1]} ${this.orientation} -> ${instruction}`
-          );
-          break;
-        }
-        this.position = result;
-        break;
+        return [position, this.orientation];
       }
       default:
         break;
     }
   }
 
+  planStep(instruction) {
+    const [position, orientation] = this.calculateInstruction(instruction);
+    const step = new Step({
+      from: [this.position, this.orientation],
+      to: [position, orientation],
+      instruction,
+      safe: this.surface.isSafe(this.formatInstruction(instruction)),
+      off: this.surface.isOff(position),
+    });
+    this.path.add(step);
+    return step;
+  }
+
+  steps() {
+    return this.path.size;
+  }
+
   explore() {
     for (const instruction of this.instructions) {
-      if (this.lost) {
-        break;
+      const step = this.planStep(instruction);
+      if (step.isOff()) {
+        return this.leaveScent(instruction);
       }
-      if (
-        this.surface.isUnsafeStep(
-          `${this.position[0]} ${this.position[1]} ${this.orientation} -> ${instruction}`
-        )
-      ) {
-        continue;
+      if (step.isSafe()) {
+        this.command(step);
       }
-      this.command(instruction);
     }
+    return this.path;
   }
 }
 

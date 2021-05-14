@@ -68,4 +68,17 @@ describe("Robot", () => {
     robot2.explore();
     expect(robot2.location()).toBe("5 1 N");
   });
+
+  test('Robot should keep track of every step', () => {
+    robot.loadInstructions("FRFFF");
+    robot.explore();
+    expect(robot.steps()).toBe(5);
+  });
+
+  test('Robot that gets lost should stop tracking steps', () => {
+    robot.loadInstructions("FLF");
+    robot.explore();
+    expect(robot.steps()).toBe(3);
+    expect(Array.from(robot.path).filter(s => s.isOff()).length).toBe(1);
+  });
 });
