@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const Expedition = require('./expedition');
+const Expedition = require('./lib/expedition');
 
 function main() {
   const input = fs.readFileSync(path.join(__dirname, 'input')).toString().trim();
